@@ -27,8 +27,12 @@
   "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^1.0.3",
     "flow": "^0.2.3",
+    "joi": "^13.1.1",
+    "jsonschema": "^1.2.2",
     "koa": "^2.4.1",
+    "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.3.0",
     "nodemon": "^1.12.7",
     "sequelize": "^4.28.6",
