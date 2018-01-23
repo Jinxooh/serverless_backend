@@ -33,7 +33,7 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
     const user = await User.build({
       username,
       email,
-      password_hash: password,
+      password_hash: User.crypt(password),
     }).save();
 
     console.log(user);

@@ -1,8 +1,9 @@
 // @flow
 import Seqeulize from 'sequelize';
+import bcrypt from 'bcrypt';
 import db from 'database/db';
 
-const User = db.define('user', {
+const UserModel = db.define('user', {
   id: {
     type: Seqeulize.UUID,
     defaultValue: Seqeulize.UUIDV1,
@@ -21,7 +22,11 @@ const User = db.define('user', {
   },
 });
 
-User.sync();
+UserModel.sync();
 
-export default User;
-
+export default class User extends UserModel {
+  static crypt(password: string): Promise<string> {
+    const saltRounds: number = 10;
+    return bcrypt.hash(password, saltRounds);
+  }
+};
