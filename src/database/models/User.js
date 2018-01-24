@@ -29,8 +29,8 @@ export default class User extends UserModel {
     const saltRounds: number = 10;
     return bcrypt.hash(password, saltRounds);
   }
-  
-  static getExitancy(type: 'email' | 'username', value: string) {
-    return UserModel.findOne({ [type]: value });
+
+  static getExistancy(type: 'email' | 'username', value: string) {
+    return UserModel.findOne({ where: { [type]: value } });
   }
-};
+}
