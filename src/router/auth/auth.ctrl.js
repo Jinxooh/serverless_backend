@@ -103,7 +103,7 @@ export const localLogin = async (ctx: Context): Promise<*> => {
   try {
     const value: any = email || username;
     const type: ('email' | 'username') = email ? 'email' : 'username';
-    const user = await User.findUser(type, value);
+    const user: UserModel = await User.findUser(type, value);
 
     const validated: boolean = await user.validatePassword(password);
     if (!validated) {
