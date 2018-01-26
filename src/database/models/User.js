@@ -5,7 +5,7 @@ import db from 'database/db';
 import { generate } from 'lib/jwt';
 
 export interface UserModel {
-  id?: string,
+  id: string,
   username: string,
   email: string,
   password_hash?: string,
