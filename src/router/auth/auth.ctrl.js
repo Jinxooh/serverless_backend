@@ -60,6 +60,10 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
       password_hash: hash,
     }).save();
 
+    const userProfile = await UserProfile.build({
+      fk_user_id: user.id,
+    }).save();
+
     const token: string = await user.generateToken();
 
     // set-cookie
@@ -155,4 +159,8 @@ export const localLogin = async (ctx: Context): Promise<*> => {
   } catch (e) {
     ctx.throw(500, e);
   }
+};
+
+export const check = async (ctx: Context): Promise<*> => {
+  ctx.body = ctx.user;
 };
