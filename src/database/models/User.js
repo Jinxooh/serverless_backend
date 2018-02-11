@@ -2,6 +2,7 @@
 import Seqeulize from 'sequelize';
 import bcrypt from 'bcrypt';
 import db from 'database/db';
+import { generate } from 'lib/jwt';
 
 const UserModel = db.define('user', {
   id: {
@@ -32,5 +33,10 @@ export default class User extends UserModel {
 
   static getExistancy(type: 'email' | 'username', value: string) {
     return UserModel.findOne({ where: { [type]: value } });
+  }
+
+  generateToken() {
+    console.log('id: ', this);
+    console.log('generate, ', generate);
   }
 }

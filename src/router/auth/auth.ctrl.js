@@ -55,11 +55,9 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
       password_hash: hash,
     }).save();
 
-    console.log(user);
+    console.log(user.generateToken());
+    ctx.body = user.dataValues;
   } catch (e) {
     ctx.throw(500, e);
   }
-  ctx.body = {
-    success: true,
-  };
 };
