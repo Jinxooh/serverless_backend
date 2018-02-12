@@ -1,6 +1,6 @@
 // @flow
 import Seqeulize from 'sequelize';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import db from 'database/db';
 import { generate } from 'lib/jwt';
 
