@@ -5,7 +5,7 @@ import auth from './auth';
 const router: Router = new Router();
 
 router.get('/bye', (ctx) => {
-  ctx.body = 'good bye~~';
+  ctx.body = process.env.SOMETHING;
 });
 
 router.use('/auth', auth.routes());

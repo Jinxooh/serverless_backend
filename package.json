@@ -5,11 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "NODE_PATH=src APP_ENV=local nodemon --inspect src/local --exec babel-node --plugins transform-es2015-modules-commonjs,transform-object-rest-spread --presets flow",
-    "deploy": "sls deploy --stage dev"
+    "deploy:dev": "sls deploy --stage dev"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",
-    "babel-eslint": "^8.0.3",
+    "babel-eslint": "^8.2.1",
     "babel-loader": "^7.1.1",
     "babel-plugin-shebang": "^0.0.0",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -26,7 +26,7 @@
     "pg-hstore": "^2.3.2",
     "pg-native": "^2.2.0",
     "serverless-dotenv": "^1.0.0-beta.2",
-    "serverless-webpack": "^3.1.1",
+    "serverless-webpack": "^4.3.0",
     "shebang-loader": "^0.0.1",
     "tedious": "^2.1.5",
     "webpack": "^3.3.0"
@@ -36,7 +36,6 @@
   "dependencies": {
     "aws-sdk": "^2.175.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "bcrypt": "^1.0.3",
     "bcryptjs": "^2.4.3",
     "dotenv": "^4.0.0",
     "fb": "^2.0.0",
@@ -53,7 +52,7 @@
     "pg": "^7.4.1",
     "sequelize": "^4.26.0",
     "sequelize-cockroachdb": "^1.0.2",
-    "serverless-http": "^1.5.2",
+    "serverless-http": "^1.5.3",
     "shortid": "^2.2.8",
     "striptags": "^3.1.1"
   }
