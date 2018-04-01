@@ -5,10 +5,10 @@ import mailgun from 'mailgun-js';
 
 import User from 'database/models/User';
 import UserProfile from 'database/models/UserProfile';
-import EmailVerification from 'database/models/EmailVerification';
+import EmailAuth from 'database/models/EmailAuth';
+
 import type { UserModel } from 'database/models/User';
-import type { UserProfileModel } from 'database/models/UserProfile';
-import type { EmailVerifiacationModel } from 'database/models/EmailVerification';
+import type { EmailAuthModel } from 'database/models/EmailAuth';
 
 const { MAILGUN_KEY: mailgunKey } = process.env;
 
@@ -21,22 +21,22 @@ const sendVerificationEmail = ({ email, code }: { email: string, code: string })
   const data = {
     from: 'Love HHJ Administrator <admin@lovehhj.com>',
     to: email,
-    subject: 'Love heo hye jung 이메일 회원가입',
+    subject: 'Join Love Heo Hye Jung!!',
     html: `
     <a href="https://imgur.com/mCY8EIA"><img src="https://i.imgur.com/mCY8EIA.png" title="source: imgur.com" style="display: block; width: 250px; margin: 0 auto;"/></a>
     <div style="max-width: 100%; width: 400px; margin: 0 auto; padding: 1rem; text-align: justify; background: #f8f9fa; border: 1px solid #dee2e6; box-sizing: border-box; border-radius: 4px; color: #868e96; margin-top: 0.5rem; box-sizing: border-box;">
-      <b style="black">lovehhj.com 에 오신것을 환영합니다! </b>회원가입을 계속하시려면 하단의 링크를 클릭하세요. 만약에 실수로 가입하셨거나, 본인이 가입신청하지 않았다면, 이 메일을 무시하세요.
+      <b style="black">Welcome to LOVE HHJ 🙈</b><br /> Following is the link for quickly joining to us. See you soon~~
     </div>
     
-    <a href="https://lovehhj.com/register?code=${code}" style="text-decoration: none; width: 400px; text-align:center; display:block; margin: 0 auto; margin-top: 1rem; background: #845ef7; padding-top: 1rem; color: white; font-size: 1.25rem; padding-bottom: 1rem; font-weight: 600; border-radius: 4px;">Love HHJ 가입하기</a>
+    <a href="https://lovehhj.com/register?code=${code}" style="text-decoration: none; width: 400px; text-align:center; display:block; margin: 0 auto; margin-top: 1rem; background: #845ef7; padding-top: 1rem; color: white; font-size: 1.25rem; padding-bottom: 1rem; font-weight: 600; border-radius: 4px;">Join Love HHJ</a>
     
-    <div style="text-align: center; margin-top: 1rem; color: #868e96; font-size: 0.85rem;"><div>위 버튼을 클릭하시거나, 다음 링크를 열으세요: <br/> <a style="color: #b197fc;" href="https://lovehhj.com/register?code=${code}">https://lovehhj.com/register?code=${code}</a></div><br/><div>이 링크는 24시간동안 유효합니다. </div></div>`,
+    <div style="text-align: center; margin-top: 1rem; color: #868e96; font-size: 0.85rem;"><div>Click folloing link or copy/paste this link into your browser: <br/> <a style="color: #b197fc;" href="https://lovehhj.com/register?code=${code}">https://lovehhj.com/register?code=${code}</a></div><br/><div>This link will expire in 24 hours, and can only be used one time.</div></div>`,
   };
 
   return mg.messages().send(data);
 };
 
-export const verifyEmail = async (ctx: Context): Promise<*> => {
+export const sendAuthEmail = async (ctx: Context): Promise<*> => {
   console.log('verifyEmail');
   type BodySchema = {
     email: string
@@ -59,7 +59,7 @@ export const verifyEmail = async (ctx: Context): Promise<*> => {
 
   try {
     const { email }: BodySchema = (ctx.request.body: any);
-    const verification: EmailVerifiacationModel = await EmailVerification.build({
+    const verification: EmailAuthModel = await EmailAuth.build({
       email,
     }).save();
     const data = await sendVerificationEmail({
