@@ -15,7 +15,7 @@ const sendMail = ({
   to,
   subject,
   body,
-  from = 'Velog <support@velog.io>',
+  from = 'Love HHJ <support@lovehhj.com>',
 }: EmailParams): Promise<*> => {
   return new Promise((resolve, reject) => {
     const params = {

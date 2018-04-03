@@ -12,6 +12,8 @@ module.exports = {
         "consistent-return": 0,
         "import/prefer-default-export": 0,
         "no-console": 0,
-        "camelcase": 0
+        "camelcase": 0,
+        "arrow-body-style": 0,
+        "class-methods-use-this": 0,
     }
 };

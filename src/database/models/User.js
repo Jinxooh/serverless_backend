@@ -1,16 +1,14 @@
 // @flow
 import Seqeulize from 'sequelize';
-import bcrypt from 'bcryptjs';
 import db from 'database/db';
 import { generate } from 'lib/token';
+import UserProfile, { type UserProfileModel } from './UserProfile';
 
 export interface UserModel {
   id: string,
   username: string,
   email: string,
-  password_hash?: string,
 
-  static crypto(password: string): Promise<string>;
   static findUser(type: 'email' | 'username', value: string): Promise<*>;
 
   generateToken(): string;
@@ -31,35 +29,24 @@ const User = db.define('user', {
     type: Seqeulize.STRING,
     unique: true,
   },
-  password_hash: {
-    type: Seqeulize.STRING,
-  },
 });
-
-User.sync();
-
-User.crypt = function crypt(password: string): Promise<string> {
-  const saltRounds: number = 10;
-  return bcrypt.hash(password, saltRounds);
-};
 
 User.findUser = function findUser(type: 'email' | 'username', value: string) {
   return User.findOne({ where: { [type]: value } });
 };
 
-User.prototype.generateToken = function generateToken(): Promise<string> {
+User.prototype.generateToken = async function generateToken(): Promise<string> {
   type TokenPayload = {
     id: string,
     username: string,
   };
   const { id, username }: TokenPayload = this;
-
-  return generate({ user: { id, username } });
-};
-
-User.prototype.validatePassword = function validatePassword(password: string): Promise<boolean> {
-  const { password_hash } = this;
-  return bcrypt.compare(password, password_hash);
+  const userProfile: UserProfileModel = await UserProfile.findByUserId(id);
+  if (!userProfile) {
+    throw new Error('user profile not found');
+  }
+  const { display_name: displayName } = userProfile;
+  return generate({ user: { id, username, displayName } });
 };
 
 export default User;
