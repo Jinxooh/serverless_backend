@@ -65,7 +65,7 @@ export const sendAuthEmail = async (ctx: Context): Promise<*> => {
       <div style="text-align: center; margin-top: 1rem; color: #868e96; font-size: 0.85rem;"><div>Click folloing link or copy/paste this link into your browser: <br/> <a style="color: #b197fc;" href="https://lovehhj.com/${emailKeywords.type}?code=${verification.code}">https://lovehhj.com/${emailKeywords.type}?code=${verification.code}</a></div><br/><div>This link will expire in 24 hours.</div></div>`,
     });
     ctx.body = {
-      isUSer: !user,
+      isUSer: !!user,
     };
   } catch (e) {
     ctx.throw(500, e);
@@ -82,7 +82,7 @@ export const getCode = async (ctx: Context): Promise<*> => {
       return;
     }
     const { email } = auth;
-    const registerToken = await generate({ email }, { expireIn: '1h', subject: 'auth-register' });
+    const registerToken = await generate({ email }, { expiresIn: '1h', subject: 'auth-register' });
     ctx.body = {
       email,
       registerToken,
