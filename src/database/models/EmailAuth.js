@@ -8,12 +8,15 @@ export interface EmailAuthModel {
   code: string,
   email: string,
   createdAt: string,
+  logged: boolean,
+  static findCode(code: string): Promise<*>,
+  use(): Promise<*>,
 }
 
 const EmailAuth = db.define('email_auth', {
   id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV1,
     primaryKey: true,
   },
   code: {
@@ -22,8 +25,30 @@ const EmailAuth = db.define('email_auth', {
     defaultValue: shortid.generate,
   },
   email: Sequelize.STRING,
+  logged: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+  },
+}, {
+  freezeTableName: true,
+  tableName: 'email_auth',
 });
 
 EmailAuth.sync();
+
+EmailAuth.findCode = function findCode(code: string): Promise<*> {
+  return EmailAuth.findOne({
+    where: {
+      code,
+      logged: false,
+    },
+  });
+};
+
+EmailAuth.prototype.use = function use(): Promise<*> {
+  return this.update({
+    logged: true,
+  });
+};
 
 export default EmailAuth;
