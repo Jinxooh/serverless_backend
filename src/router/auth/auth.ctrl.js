@@ -53,21 +53,6 @@ export const sendAuthEmail = async (ctx: Context): Promise<*> => {
 
     const data = await sendMail({
       to: email,
-<<<<<<< HEAD
-      subject: 'Velog 이메일 회원가입',
-      from: 'Velog <verification@velog.io>',
-      body: `<a href="https://velog.io"><img src="https://i.imgur.com/mCY8EIA.png" style="display: block; width: 128px; margin: 0 auto;"/></a>
-      <div style="max-width: 100%; width: 400px; margin: 0 auto; padding: 1rem; text-align: justify; background: #f8f9fa; border: 1px solid #dee2e6; box-sizing: border-box; border-radius: 4px; color: #868e96; margin-top: 0.5rem; box-sizing: border-box;">
-      <b style="black">Welcome to LOVE HHJ 🙈</b><br /> Following is the link for quickly joining to us. See you soon~~
-      </div>
-      
-      <a href="https://lovehhj.com/register?code=${verification.code}" style="text-decoration: none; width: 400px; text-align:center; display:block; margin: 0 auto; margin-top: 1rem; background: #845ef7; padding-top: 1rem; color: white; font-size: 1.25rem; padding-bottom: 1rem; font-weight: 600; border-radius: 4px;">Join Love HHJ</a>
-      
-      <div style="text-align: center; margin-top: 1rem; color: #868e96; font-size: 0.85rem;"><div>Click folloing link or copy/paste this link into your browser: <br/> <a style="color: #b197fc;" href="https://lovehhj.com/register?code=${verification.code}">https://lovehhj.com/register?code=${verification.code}</a></div><br/><div>This link will expire in 24 hours, and can only be used one time.</div></div>`,
-    });
-
-    console.log('data', data);
-=======
       subject: `${emailKeywords.text} Love Heo Hye Jung!!`,
       from: 'Love HHJ <support@lovehhj.com>',
       body: `
@@ -103,28 +88,6 @@ export const getCode = async (ctx: Context): Promise<*> => {
       email,
       registerToken,
     };
-    await auth.use();
->>>>>>> 127b142036f4e68dda06b0f2dde11b50ba3f74bf
-  } catch (e) {
-    ctx.throw(500, e);
-  }
-};
-
-export const getCode = async (ctx: Context): Promise<*> => {
-  const { code } = ctx.params;
-
-  try {
-    const auth: EmailAuthModel = await EmailAuth.findCode(code);
-    if (!auth) {
-      ctx.status = 440;
-      return;
-    }
-
-    const { email } = auth;
-
-    ctx.body = {
-      email,
-    };
     // await auth.use();
   } catch (e) {
     ctx.throw(500, e);
@@ -142,10 +105,11 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
   };
 
   const schema = Joi.object().keys({
-    registerToken: Joi.string().email().required(),
+    registerToken: Joi.string().required(),
     form: Joi.object().keys({
       displayName: Joi.string().min(1).max(40),
-      username: Joi.string().alphanum().min(3).max(16).required(),
+      username: Joi.string().alphanum().min(3).max(16)
+        .required(),
       shortBio: Joi.string().max(140),
     }).required(),
   });
@@ -181,9 +145,9 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
     return;
   }
 
-  try {
-    const { email } = decoded;
+  const { email } = decoded;
 
+  try {
     const [emailExists, usernameExists] = await Promise.all([
       User.findUser('email', email),
       User.findUser('username', username),
