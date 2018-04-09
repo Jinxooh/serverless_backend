@@ -100,7 +100,7 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
     form: {
       displayName: string,
       username: string,
-      shorBio: string,
+      shortBio: string,
     }
   };
 
@@ -171,10 +171,10 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
       email,
     }).save();
 
-    const userProfile = await UserProfile.build({
+    await UserProfile.build({
       fk_user_id: user.id,
       display_name: displayName,
-      short_bio: shortBio
+      short_bio: shortBio,
     }).save();
 
     const token: string = await user.generateToken();
