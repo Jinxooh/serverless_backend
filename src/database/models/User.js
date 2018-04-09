@@ -13,6 +13,7 @@ export interface UserModel {
 
   generateToken(): string;
   validatePassword(password: string): Promise<boolean>;
+  getProfile(): Promise<UserProfileModel>;
 }
 
 const User = db.define('user', {
@@ -33,6 +34,11 @@ const User = db.define('user', {
 
 User.findUser = function findUser(type: 'email' | 'username', value: string) {
   return User.findOne({ where: { [type]: value } });
+};
+
+User.prototype.getProfile = async function getProfile(): Promise<*> {
+  const { id } = this;
+  return UserProfile.findByUserId(id);
 };
 
 User.prototype.generateToken = async function generateToken(): Promise<string> {
