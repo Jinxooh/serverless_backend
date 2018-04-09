@@ -331,5 +331,7 @@ export const check = async (ctx: Context): Promise<*> => {
     ctx.status = 401;
     return;
   }
-  ctx.body = ctx.user;
+  ctx.body = {
+    user: ctx.user,
+  };
 };
