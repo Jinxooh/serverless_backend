@@ -88,7 +88,7 @@ export const getCode = async (ctx: Context): Promise<*> => {
       email,
       registerToken,
     };
-    // await auth.use();
+    await auth.use();
   } catch (e) {
     ctx.throw(500, e);
   }
@@ -125,7 +125,7 @@ export const codeLogin = async (ctx: Context): Promise<*> => {
 
     // set-cookie
     // $FlowFixMe: intersection bug
-    ctx.cookies.set('token', token, {
+    ctx.cookies.set('access_token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -135,11 +135,12 @@ export const codeLogin = async (ctx: Context): Promise<*> => {
         id: user.id,
         username: user.username,
         displayName: profile.display_name,
+        thumbnail: profile.thumbnail,
       },
       token,
     };
 
-    // await auth.use();
+    await auth.use();
   } catch (e) {
     ctx.throw(500, e);
   }
@@ -232,7 +233,7 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
 
     // set-cookie
     // $FlowFixMe: intersection bug
-    ctx.cookies.set('token', token, {
+    ctx.cookies.set('access_token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -334,4 +335,10 @@ export const check = async (ctx: Context): Promise<*> => {
   ctx.body = {
     user: ctx.user,
   };
+};
+
+export const logout = (ctx: Context) => {
+  // $FlowFixMe: intersection bug
+  ctx.cookies.set('access_token', null);
+  ctx.status = 204;
 };

@@ -51,8 +51,15 @@ User.prototype.generateToken = async function generateToken(): Promise<string> {
   if (!userProfile) {
     throw new Error('user profile not found');
   }
-  const { display_name: displayName } = userProfile;
-  return generate({ user: { id, username, displayName } });
+  const { display_name: displayName, thumbnail } = userProfile;
+  const user = {
+    id,
+    username,
+    displayName,
+    thumbnail,
+  };
+
+  return generate({ user });
 };
 
 export default User;
