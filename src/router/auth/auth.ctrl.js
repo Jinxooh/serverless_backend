@@ -14,7 +14,6 @@ import type { UserProfileModel } from 'database/models/UserProfile';
 import type { EmailAuthModel } from 'database/models/EmailAuth';
 
 export const sendAuthEmail = async (ctx: Context): Promise<*> => {
-  console.log('verifyEmail');
   type BodySchema = {
     email: string
   };
