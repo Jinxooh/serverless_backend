@@ -10,7 +10,7 @@ router.get('/bye', (ctx) => {
 });
 
 router.use('/auth', auth.routes());
-router.use('/check', (ctx: Context) => {
+router.get('/check', (ctx: Context) => {
   ctx.body = {
     version: '1.0.0.-alpha.0',
   };

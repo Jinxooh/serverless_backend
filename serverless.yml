@@ -23,8 +23,33 @@ functions:
       - http:
           method: ANY
           path: /
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
       - http:
           path: /{any+}
           method: ANY
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+    vpc:
+      securityGroupIds:
+        - sg-5330bc38
+      subnetIds:
+        - subnet-90f561dc
+        - subnet-d02a0bb8
+        - subnet-87f460cb
