@@ -11,7 +11,7 @@ export default async (ctx: Context, next: () => Promise<*>) => {
 
   try {
     const decoded: any = await decode(token);
-    console.log(decoded);
+    // console.log(decoded);
     const { user, exp } = decoded;
 
     ctx.user = user;
