@@ -2,11 +2,12 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import serverless from 'serverless-http';
+import cors from 'lib/middlewares/cors';
 import authToken from 'lib/middlewares/authToken';
 import db from 'database/db';
 import sync from 'database/sync';
-
 import router from './router';
+
 
 export default class Server {
   app: Koa;
@@ -31,6 +32,7 @@ export default class Server {
 
   middleware(): void {
     const { app } = this;
+    app.use(cors);
     app.use(authToken);
     app.use(bodyParser());
     app.use(router.routes())
