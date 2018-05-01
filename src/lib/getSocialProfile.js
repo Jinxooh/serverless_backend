@@ -1,5 +1,5 @@
 // @flow
-import GithubAPI from 'github';
+import GithubAPI from '@octokit/rest';
 import GoogleAPI from 'googleapis';
 import FacebookAPI from 'fb';
 
@@ -33,18 +33,23 @@ const profileGetters = {
     return FacebookAPI.api('me', { fields: ['email', 'picture'], access_token: accessToken })
       .then(auth => ({
         id: auth.id,
-        email: auth.email,
+        email: auth.email || null,
         thumbnail: auth.picture.data.url,
       }));
   },
-  google(accessToken: string) { 
+  google(accessToken: string) {
     const plus = GoogleAPI.plus('v1');
     return new Promise((resolve, reject) => {
       plus.people.get({
         userId: 'me',
         access_token: accessToken,
       }, (err, auth) => {
-        if (err) reject(err);
+        console.log(err, auth);
+        if (err) {
+          reject(err);
+          return;
+        }
+
         const {
           id,
           image,

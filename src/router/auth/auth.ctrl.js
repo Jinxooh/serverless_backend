@@ -1,7 +1,6 @@
 // @flow
 import type { Context } from 'koa';
 import Joi from 'joi';
-// import mailgun from 'mailgun-js';
 
 import sendMail from 'lib/sendMail';
 import User from 'database/models/User';
@@ -9,6 +8,7 @@ import UserProfile from 'database/models/UserProfile';
 import EmailAuth from 'database/models/EmailAuth';
 import { generate, decode } from 'lib/token';
 
+import SocialAccount from 'database/models/SocialAccount';
 import getSocialProfile from 'lib/getSocialProfile';
 
 import type { UserModel } from 'database/models/User';
@@ -252,82 +252,6 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
   }
 };
 
-// export const localLogin = async (ctx: Context): Promise<*> => {
-//   type BodySchema = {
-//     email?: string,
-//     password: string,
-//     username?: string,
-//   }
-
-//   const { email, password, username }: BodySchema = (ctx.request.body: any);
-
-//   if (!(email || username)) {
-//     ctx.status = 401;
-//     ctx.body = {
-//       name: 'LOGIN_FAILURE',
-//     };
-//     return;
-//   }
-
-//   const schema = Joi.object().keys({
-//     email: Joi.string().email(),
-//     password: Joi.string().min(6).required(),
-//     username: Joi.string().alphanum().min(3).max(20),
-//   });
-
-//   // somehow wrong schema
-//   const result: any = Joi.validate(ctx.request.body, schema);
-//   if (result.error) {
-//     ctx.status = 401;
-//     ctx.body = {
-//       name: 'LOGIN_FAILURE',
-//     };
-//     return;
-//   }
-
-//   try {
-//     const value: any = email || username;
-//     const type: ('email' | 'username') = email ? 'email' : 'username';
-//     const user: UserModel = await User.findUser(type, value);
-
-//     if (!user) {
-//       ctx.status = 401;
-//       ctx.body = {
-//         name: 'LOGIN_FAILURE',
-//       };
-//       return;
-//     }
-
-//     const validated: boolean = await user.validatePassword(password);
-//     if (!validated) {
-//       ctx.status = 401;
-//       ctx.body = {
-//         name: 'LOGIN_FAILURE',
-//       };
-//       return;
-//     }
-
-//     const token: string = await user.generateToken();
-
-//     // set-cookie
-//     // $FlowFixMe: intersection bug
-//     ctx.cookies.set('token', token, {
-//       httpOnly: true,
-//       maxAge: 1000 * 60 * 60 * 24 * 7,
-//     });
-
-//     ctx.body = {
-//       user: {
-//         id: user.id,
-//         username: user.username,
-//       },
-//       token,
-//     };
-//   } catch (e) {
-//     ctx.throw(500, e);
-//   }
-// };
-
 export const check = async (ctx: Context): Promise<*> => {
   if (!ctx.user) {
     ctx.status = 401;
@@ -344,7 +268,7 @@ export const logout = (ctx: Context) => {
   ctx.status = 204;
 };
 
-export const socialExists = async (ctx: Context): Promise<*> => {
+export const verifySocial = async (ctx: Context): Promise<*> => {
   type BodySchema = {
     accessToken: string
   };
@@ -353,9 +277,166 @@ export const socialExists = async (ctx: Context): Promise<*> => {
   const { provider } = ctx.params;
 
   try {
-    const result = await getSocialProfile(provider, accessToken);
-    console.log(result);
+    const profile = await getSocialProfile(provider, accessToken);
+    /*
+      TODO:
+        - check both email, social-id existancy
+     */
+    ctx.body = {
+      profile,
+      exists: false,
+    };
+  } catch (e) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CREDENTIAL',
+    };
+  }
+};
+
+export const socialRegister = async (ctx: Context): Promise<*> => {
+  type BodySchema = {
+    fallbackEmail: string,
+    accessToken: string,
+    form: {
+      displayName: string,
+      username: string,
+      shortBio: string,
+    }
+  };
+
+  const schema = Joi.object().keys({
+    fallbackEmail: Joi.string(),
+    accessToken: Joi.string().required(),
+    form: Joi.object().keys({
+      displayName: Joi.string().min(1).max(40),
+      username: Joi.string().alphanum().min(3).max(16)
+        .required(),
+      shortBio: Joi.string().max(140),
+    }).required(),
+  });
+
+  const result: any = Joi.validate(ctx.request.body, schema);
+
+  if (result.error) {
+    ctx.status = 400;
+    ctx.body = {
+      name: 'WRONG_SCHEMA',
+      payload: result.error,
+    };
+    return;
+  }
+
+  const { provider } = ctx.params;
+  const { accessToken, form, fallbackEmail }: BodySchema = (ctx.request.body: any);
+
+  let profile = null;
+
+  try {
+    profile = await getSocialProfile(provider, accessToken);
+  } catch (e) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CRENDENTIALS',
+    };
+    return;
+  }
+
+  const { id, thumbnail, email } = profile;
+  const { displayName, username, shortBio } = form;
+  const socialId = id.toString();
+
+  try {
+    const [emailExists, usernameEixsts] = await Promise.all([
+      User.findUser('email', email),
+      User.findUser('username', username),
+    ]);
+
+    if (emailExists || usernameEixsts) {
+      ctx.status = 409;
+      ctx.body = {
+        name: 'DUPLICATED_ACCOUNT',
+        payload: emailExists ? 'email' : 'username',
+      };
+      return;
+    }
+
+    const socialExists = await SocialAccount.findBySocialId(socialId);
+
+    if (socialExists) {
+      ctx.status = 409;
+      ctx.body = {
+        name: 'SOCIAL_ACCOUNT_EXISTS',
+      };
+      return;
+    }
+
+    const user: User = await User.build({
+      username,
+      email: email || fallbackEmail,
+    }).save();
+
+    await UserProfile.build({
+      fk_user_id: user.id,
+      display_name: displayName,
+      short_bio: shortBio,
+      thumbnail,
+    }).save();
+
+    // create SocialAccount row;
+    await SocialAccount.build({
+      fk_user_id: user.id,
+      social_id: id.toString(),
+      provider,
+      access_token: accessToken,
+    }).save();
+
+    ctx.body = user.getProfie();
+
+    const token: string = await user.generateToken();
+
+    ctx.cookies.set('access_token', token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    ctx.body = {
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName,
+        thumbnail,
+      },
+      token,
+    };
   } catch (e) {
     ctx.throw(500, e);
   }
+};
+
+export const socialLogin = async (ctx: Context): Promise<*> => {
+  type BodySchema = {
+    accessToken: string
+  };
+
+  const { accessToken }: BodySchema = (ctx.request.body: any);
+  const { provider } = ctx.params;
+
+  if (typeof accessToken !== 'string') {
+    ctx.status = 400;
+    return;
+  }
+
+  let profile = null;
+
+  try {
+    profile = await getSocialProfile(provider, accessToken);
+  } catch (e) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CREDENTIAL',
+    };
+  }
+
+  const socialId = profile.id.toString();
 };

@@ -12,6 +12,7 @@ auth.post('/register/local', authCtrl.createLocalAccount);
 auth.get('/check', authCtrl.check);
 auth.post('/code-login', authCtrl.codeLogin);
 auth.post('/logout', authCtrl.logout);
-auth.post('/exists/social/:provider(github|facebook|google)', authCtrl.socialExists);
+auth.post('/verify-social/:provider(github|facebook|google)', authCtrl.verifySocial);
+auth.post('/register/:provider(github|facebook|google)', authCtrl.socialRegister);
 
 export default auth;
