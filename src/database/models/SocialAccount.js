@@ -15,7 +15,10 @@ const SocialAccount = db.define('social_profile', {
 });
 
 SocialAccount.findBySocialId = function findBySocialId(socialId: string) {
-  return SocialAccount.findOne({ where: { social_id: socialId } });
+  return SocialAccount.findOne({
+    include: [User],
+    where: { social_id: socialId },
+  }).then(data => (data ? data.user : null));
 };
 
 SocialAccount.associate = function associate() {

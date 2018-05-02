@@ -14,5 +14,6 @@ auth.post('/code-login', authCtrl.codeLogin);
 auth.post('/logout', authCtrl.logout);
 auth.post('/verify-social/:provider(github|facebook|google)', authCtrl.verifySocial);
 auth.post('/register/:provider(github|facebook|google)', authCtrl.socialRegister);
+auth.post('/login/:provider(github|facebook|google)', authCtrl.socialLogin);
 
 export default auth;

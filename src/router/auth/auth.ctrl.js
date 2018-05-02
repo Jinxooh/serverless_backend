@@ -9,7 +9,7 @@ import EmailAuth from 'database/models/EmailAuth';
 import { generate, decode } from 'lib/token';
 
 import SocialAccount from 'database/models/SocialAccount';
-import getSocialProfile from 'lib/getSocialProfile';
+import getSocialProfile, { type Profile } from 'lib/getSocialProfile';
 
 import type { UserModel } from 'database/models/User';
 import type { UserProfileModel } from 'database/models/UserProfile';
@@ -427,7 +427,7 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
     return;
   }
 
-  let profile = null;
+  let profile: ?Profile = null;
 
   try {
     profile = await getSocialProfile(provider, accessToken);
@@ -438,5 +438,46 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
     };
   }
 
+  if (profile === null || profile === undefined) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CRENDENTIAL',
+    };
+    return;
+  }
+
   const socialId = profile.id.toString();
+  
+  try {
+    const user = await SocialAccount.findBySocialId(socialId);
+    if (!user) {
+      // Todo: check Email
+      ctx.status = 401;
+      ctx.body = {
+        name: 'NOT_REGISTERED',
+      };
+      return;
+    }
+    
+    const userProfile = await user.getProfie();
+    const token = await user.generateToken();
+
+    ctx.body = {
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: userProfile.display_name,
+        thumbnail: userPorfile.thumbnail,
+      },
+      token,
+    };
+
+    // $FlowFixMe: intersection bug
+    ctx.cookies.set('access_token', token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+  } catch (e) {
+    ctx.throw(500, e);
+  }
 };
