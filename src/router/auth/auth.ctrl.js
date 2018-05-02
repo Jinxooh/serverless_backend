@@ -330,7 +330,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
   const { provider } = ctx.params;
   const { accessToken, form, fallbackEmail }: BodySchema = (ctx.request.body: any);
 
-  let profile = null;
+  let profile: ?Profile = null;
 
   try {
     profile = await getSocialProfile(provider, accessToken);
@@ -340,6 +340,28 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
       name: 'WRONG_CRENDENTIALS',
     };
     return;
+  }
+
+  if (!profile) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CREDENTIALS',
+    };
+    return;
+  }
+
+  try {
+    const [socialAccount, user] = await Promise.all([
+      User.findUser('email', profile.email),
+      SocialAccount.findBySocialId(profile.id.toString()),
+    ]);
+
+    ctx.body = {
+      profile,
+      exists: !!(socialAccount || user),
+    };
+  } catch (e) {
+    ctx.throw(500, e);
   }
 
   const { id, thumbnail, email } = profile;
@@ -449,16 +471,26 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
   const socialId = profile.id.toString();
   
   try {
-    const user = await SocialAccount.findBySocialId(socialId);
+    let user = await SocialAccount.findBySocialId(socialId);
     if (!user) {
-      // Todo: check Email
-      ctx.status = 401;
-      ctx.body = {
-        name: 'NOT_REGISTERED',
-      };
-      return;
+      // if socialaccount not found, try find by email
+      user = await User.findUser('email', profile.email);
+      if (!user) {
+        ctx.status = 401;
+        ctx.body = {
+          name: 'NOT_REGISTERED',
+        };
+        return;
+      }
+      // if user is found, link social account
+      await SocialAccount.build({
+        fk_user_id: user.id,
+        social_id: profile.id.toString(),
+        provider,
+        access_token: accessToken,
+      }).save();
     }
-    
+
     const userProfile = await user.getProfie();
     const token = await user.generateToken();
 
@@ -467,7 +499,7 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
         id: user.id,
         username: user.username,
         displayName: userProfile.display_name,
-        thumbnail: userPorfile.thumbnail,
+        thumbnail: userProfile.thumbnail,
       },
       token,
     };
