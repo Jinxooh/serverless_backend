@@ -276,21 +276,39 @@ export const verifySocial = async (ctx: Context): Promise<*> => {
   const { accessToken }: BodySchema = (ctx.request.body: any);
   const { provider } = ctx.params;
 
+  let profile: ?Profile = null;
+
   try {
-    const profile = await getSocialProfile(provider, accessToken);
-    /*
-      TODO:
-        - check both email, social-id existancy
-     */
-    ctx.body = {
-      profile,
-      exists: false,
-    };
+    profile = await getSocialProfile(provider, accessToken);
   } catch (e) {
     ctx.status = 401;
     ctx.body = {
       name: 'WRONG_CREDENTIAL',
     };
+  }
+
+  if (!profile) {
+    ctx.status = 401;
+    ctx.body = {
+      name: 'WRONG_CREDENTIAL',
+    };
+    return;
+  }
+
+  try {
+    const [socialAccount, user] = await Promise.all([
+      User.findUser('email', profile.email),
+      SocialAccount.findBySocialId(profile.id.toString()),
+    ]);
+
+    console.log(socialAccount, user);
+
+    ctx.body = {
+      profile,
+      exists: !!(socialAccount || user),
+    };
+  } catch (e) {
+    ctx.throw(500, e);
   }
 };
 
@@ -469,7 +487,7 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
   }
 
   const socialId = profile.id.toString();
-  
+
   try {
     let user = await SocialAccount.findBySocialId(socialId);
     if (!user) {

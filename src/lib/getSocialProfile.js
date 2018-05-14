@@ -7,6 +7,7 @@ export type Profile = {
   id: number | string,
   thumbnail: ?string,
   email: ?string,
+  name: ?string,
 };
 
 const profileGetters = {
@@ -26,12 +27,15 @@ const profileGetters = {
           id,
           avatar_url: thumbnail,
           email,
+          name,
         } = res.data;
+        console.log(res.data);
 
         const profile = {
           id,
           thumbnail,
           email,
+          name,
         };
 
         resolve(profile);
@@ -39,9 +43,10 @@ const profileGetters = {
     });
   },
   facebook(accessToken: string): Promise<Profile> {
-    return FacebookAPI.api('me', { fields: ['email', 'picture'], access_token: accessToken })
+    return FacebookAPI.api('me', { fields: ['name', 'email', 'picture'], access_token: accessToken })
       .then(auth => ({
         id: auth.id,
+        name: auth.name,
         email: auth.email || null,
         thumbnail: auth.picture.data.url,
       }));
@@ -63,12 +68,14 @@ const profileGetters = {
           id,
           image,
           emails,
+          displayName,
         } = auth;
 
         const profile = {
           id,
           thumbnail: image.url,
           email: emails[0].value,
+          name: displayName && displayName.split(' (')[0],
         };
 
         resolve(profile);
