@@ -1,6 +1,6 @@
 // @flow
 import GithubAPI from '@octokit/rest';
-import GoogleAPI from 'googleapis';
+import { google } from 'googleapis';
 import FacebookAPI from 'fb';
 
 export type Profile = {
@@ -52,24 +52,23 @@ const profileGetters = {
       }));
   },
   google(accessToken: string): Promise<Profile> {
-    const plus = GoogleAPI.plus('v1');
+    const plus = google.plus({ version: 'v1' }); // googleapis v30
     return new Promise((resolve, reject) => {
       plus.people.get({
         userId: 'me',
         access_token: accessToken,
       }, (err, auth) => {
-        console.log(err, auth);
         if (err) {
           reject(err);
           return;
         }
-
+        const { data } = auth;
         const {
           id,
           image,
           emails,
           displayName,
-        } = auth;
+        } = data;
 
         const profile = {
           id,
@@ -77,7 +76,6 @@ const profileGetters = {
           email: emails[0].value,
           name: displayName && displayName.split(' (')[0],
         };
-
         resolve(profile);
       });
     });

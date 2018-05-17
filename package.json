@@ -43,7 +43,7 @@
     "dotenv": "^4.0.0",
     "fb": "^2.0.0",
     "github": "^14.0.0",
-    "googleapis": "^29.0.0",
+    "googleapis": "^30.0.0",
     "joi": "^13.0.2",
     "jsonwebtoken": "^8.1.0",
     "koa": "^2.4.1",
