@@ -509,7 +509,7 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
       }).save();
     }
 
-    const userProfile = await user.getProfie();
+    const userProfile = await user.getProfile();
     const token = await user.generateToken();
 
     ctx.body = {
