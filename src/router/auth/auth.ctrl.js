@@ -61,9 +61,9 @@ export const sendAuthEmail = async (ctx: Context): Promise<*> => {
       <div style="max-width: 100%; width: 400px; margin: 0 auto; padding: 1rem; text-align: justify; background: #f8f9fa; border: 1px solid #dee2e6; box-sizing: border-box; border-radius: 4px; color: #868e96; margin-top: 0.5rem; box-sizing: border-box;">
         <b style="black">Welcome to LOVE HHJ 🙈</b><br /> Following is the link for quickly ${emailKeywords.text} to us. See you soon~~
       </div>
-      
+
       <a href="https://lovehhj.com/${emailKeywords.type}?code=${verification.code}" style="text-decoration: none; width: 400px; text-align:center; display:block; margin: 0 auto; margin-top: 1rem; background: #845ef7; padding-top: 1rem; color: white; font-size: 1.25rem; padding-bottom: 1rem; font-weight: 600; border-radius: 4px;">${emailKeywords.text} Love HHJ</a>
-      
+
       <div style="text-align: center; margin-top: 1rem; color: #868e96; font-size: 0.85rem;"><div>Click folloing link or copy/paste this link into your browser: <br/> <a style="color: #b197fc;" href="https://lovehhj.com/${emailKeywords.type}?code=${verification.code}">https://lovehhj.com/${emailKeywords.type}?code=${verification.code}</a></div><br/><div>This link will expire in 24 hours.</div></div>`,
     });
     ctx.body = {
@@ -411,7 +411,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
       return;
     }
 
-    const user: User = await User.build({
+    const user: UserModel = await User.build({
       username,
       email: email || fallbackEmail,
     }).save();
@@ -431,7 +431,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
       access_token: accessToken,
     }).save();
 
-    ctx.body = user.getProfie();
+    ctx.body = user.getProfile();
 
     const token: string = await user.generateToken();
 
