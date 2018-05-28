@@ -4,7 +4,7 @@ import db from 'database/db';
 import { Tag, Post } from 'database/models';
 import { primaryUUID } from 'lib/common';
 
-const PostsTags = db.defines('posts_tags', {
+const PostsTags = db.define('posts_tags', {
   id: primaryUUID,
   fk_post_id: Sequelize.UUID,
   fk_tag_id: Sequelize.UUID,

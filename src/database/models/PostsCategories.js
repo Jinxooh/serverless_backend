@@ -5,7 +5,7 @@ import { primaryUUID } from 'lib/common';
 import { Category, Post } from 'database/models';
 
 /* N:M Relationship between Posts and Categories */
-const PostsCategories = db.defines('posts_categories', {
+const PostsCategories = db.define('posts_categories', {
   id: primaryUUID,
   fk_post_id: Sequelize.UUID,
   fk_category_id: Sequelize.UUID,
