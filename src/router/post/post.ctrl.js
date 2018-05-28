@@ -5,7 +5,7 @@ import Joi from 'joi';
 import { validateSchema } from 'lib/common';
 import { Category, Post, PostsCategories, PostsTags, Tag, User, UserProfile } from 'database/models';
 
-import { type PostModel } from 'datbase/models/Post';
+import { type PostModel } from 'database/models/Post';
 
 export const writePost = async (ctx: Context): Promise<*> => {
   type BodySchema = {
