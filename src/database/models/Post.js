@@ -4,7 +4,7 @@ import db from 'database/db';
 import { User } from 'database/models';
 import { primaryUUID } from 'lib/common';
 
-export type PostAttribute = {
+export type PostModel = {
   id: string,
   title: string,
   body: string,
@@ -25,6 +25,7 @@ const Post = db.define('post', {
   is_temp: Sequelize.BOOLEAN,
   meta_json: Sequelize.TEXT,
   fk_user_id: Sequelize.UUID,
+  original_post_id: Sequelize.UUID,
 });
 
 Post.associate = function associate() {
