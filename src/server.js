@@ -2,7 +2,6 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import serverless from 'serverless-http';
-import cors from 'lib/middlewares/cors';
 import authToken from 'lib/middlewares/authToken';
 import db from 'database/db';
 import sync from 'database/sync';
@@ -22,7 +21,7 @@ export default class Server {
     db.authenticate().then(
       () => {
         sync();
-        console.log('DB connection has been established');
+        console.log('DB Connection has been established');
       },
       (err) => {
         console.error('Unable to connect to the DB:', err);
@@ -32,7 +31,6 @@ export default class Server {
 
   middleware(): void {
     const { app } = this;
-    app.use(cors);
     app.use(authToken);
     app.use(bodyParser());
     app.use(router.routes())
@@ -42,7 +40,7 @@ export default class Server {
   listen(port: number): void {
     const { app } = this;
     app.listen(port);
-    console.log('Listening on port ', port);
+    console.log('Listening to port', port);
   }
 
   serverless(): any {

@@ -21,7 +21,7 @@ export const writePost = async (ctx: Context): Promise<*> => {
   };
 
   const schema = Joi.object().keys({
-    title: Joi.string().required().min().max(120),
+    title: Joi.string().required().min(1).max(120),
     body: Joi.string().required().min(1),
     shortDescription: Joi.string(),
     thumbnail: Joi.string(),
@@ -29,7 +29,7 @@ export const writePost = async (ctx: Context): Promise<*> => {
     isTemp: Joi.boolean().required(),
     meta: Joi.any(),
     categories: Joi.array().items(Joi.string()),
-    tags: Joi.array().items(Joi.stirng()),
+    tags: Joi.array().items(Joi.string()),
   });
 
   if (!validateSchema(ctx, schema)) {
@@ -42,7 +42,9 @@ export const writePost = async (ctx: Context): Promise<*> => {
   }: BodySchema = (ctx.request.body: any);
 
   console.log(ctx.request.body);
+
   try {
+    // create Post data
     const post = await Post.build({
       title,
       body,
@@ -50,11 +52,8 @@ export const writePost = async (ctx: Context): Promise<*> => {
       thumbnail,
       is_markdown: isMarkdown,
       is_temp: isTemp,
-      meta,
-      categories,
-      tags,
+      fk_user_id: ctx.user.id,
     }).save();
-
     ctx.body = post.toJSON();
   } catch (e) {
     ctx.throw(500, e);

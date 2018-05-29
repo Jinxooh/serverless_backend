@@ -1,5 +1,5 @@
 // @flow
-import Seqeulize from 'sequelize';
+import Sequelize from 'sequelize';
 import db from 'database/db';
 import User from './User';
 
@@ -12,13 +12,14 @@ export interface UserProfileModel {
 
 const UserProfile = db.define('user_profile', {
   id: {
-    type: Seqeulize.UUID,
-    defaultValue: Seqeulize.UUIDV1,
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV1,
     primaryKey: true,
   },
-  display_name: Seqeulize.STRING,
-  short_bio: Seqeulize.STRING,
-  thumbnail: Seqeulize.STRING,
+  /* foreignKey fk_user_id */
+  display_name: Sequelize.STRING,
+  short_bio: Sequelize.STRING,
+  thumbnail: Sequelize.STRING,
 });
 
 UserProfile.associate = function associate() {

@@ -6,9 +6,8 @@ import sendMail from 'lib/sendMail';
 import User from 'database/models/User';
 import UserProfile from 'database/models/UserProfile';
 import EmailAuth from 'database/models/EmailAuth';
-import { generate, decode } from 'lib/token';
-
 import SocialAccount from 'database/models/SocialAccount';
+import { generate, decode } from 'lib/token';
 import getSocialProfile, { type Profile } from 'lib/getSocialProfile';
 
 import type { UserModel } from 'database/models/User';
@@ -124,7 +123,6 @@ export const codeLogin = async (ctx: Context): Promise<*> => {
     const token = await user.generateToken();
     const profile: UserProfileModel = await user.getProfile();
 
-    // set-cookie
     // $FlowFixMe: intersection bug
     ctx.cookies.set('access_token', token, {
       httpOnly: true,
@@ -140,7 +138,6 @@ export const codeLogin = async (ctx: Context): Promise<*> => {
       },
       token,
     };
-
     await auth.use();
   } catch (e) {
     ctx.throw(500, e);
@@ -168,6 +165,7 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
   });
 
   const result: any = Joi.validate(ctx.request.body, schema);
+
   if (result.error) {
     ctx.status = 400;
     ctx.body = {
@@ -219,7 +217,7 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
   }
 
   try {
-    const user: UserModel = await User.build({
+    const user:User = await User.build({
       username,
       email,
     }).save();
@@ -232,7 +230,6 @@ export const createLocalAccount = async (ctx: Context): Promise<*> => {
 
     const token: string = await user.generateToken();
 
-    // set-cookie
     // $FlowFixMe: intersection bug
     ctx.cookies.set('access_token', token, {
       httpOnly: true,
@@ -298,7 +295,7 @@ export const verifySocial = async (ctx: Context): Promise<*> => {
   try {
     const [socialAccount, user] = await Promise.all([
       User.findUser('email', profile.email),
-      SocialAccount.findBySocialId(profile.id.toString()),
+      SocialAccount.findUserBySocialId(profile.id.toString()),
     ]);
 
     console.log(socialAccount, user);
@@ -348,19 +345,11 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
   const { provider } = ctx.params;
   const { accessToken, form, fallbackEmail }: BodySchema = (ctx.request.body: any);
 
-  let profile: ?Profile = null;
+  let profile = null;
 
   try {
     profile = await getSocialProfile(provider, accessToken);
   } catch (e) {
-    ctx.status = 401;
-    ctx.body = {
-      name: 'WRONG_CRENDENTIALS',
-    };
-    return;
-  }
-
-  if (!profile) {
     ctx.status = 401;
     ctx.body = {
       name: 'WRONG_CREDENTIALS',
@@ -368,31 +357,17 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
     return;
   }
 
-  try {
-    const [socialAccount, user] = await Promise.all([
-      User.findUser('email', profile.email),
-      SocialAccount.findBySocialId(profile.id.toString()),
-    ]);
-
-    ctx.body = {
-      profile,
-      exists: !!(socialAccount || user),
-    };
-  } catch (e) {
-    ctx.throw(500, e);
-  }
-
   const { id, thumbnail, email } = profile;
   const { displayName, username, shortBio } = form;
   const socialId = id.toString();
 
   try {
-    const [emailExists, usernameEixsts] = await Promise.all([
+    const [emailExists, usernameExists] = await Promise.all([
       User.findUser('email', email),
       User.findUser('username', username),
     ]);
 
-    if (emailExists || usernameEixsts) {
+    if (emailExists || usernameExists) {
       ctx.status = 409;
       ctx.body = {
         name: 'DUPLICATED_ACCOUNT',
@@ -401,7 +376,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
       return;
     }
 
-    const socialExists = await SocialAccount.findBySocialId(socialId);
+    const socialExists = await SocialAccount.findUserBySocialId(socialId);
 
     if (socialExists) {
       ctx.status = 409;
@@ -411,7 +386,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
       return;
     }
 
-    const user: UserModel = await User.build({
+    const user:UserModel = await User.build({
       username,
       email: email || fallbackEmail,
     }).save();
@@ -435,6 +410,7 @@ export const socialRegister = async (ctx: Context): Promise<*> => {
 
     const token: string = await user.generateToken();
 
+    // $FlowFixMe: intersection bug
     ctx.cookies.set('access_token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
@@ -474,22 +450,21 @@ export const socialLogin = async (ctx: Context): Promise<*> => {
   } catch (e) {
     ctx.status = 401;
     ctx.body = {
-      name: 'WRONG_CREDENTIAL',
+      name: 'WRONG_CREDENTIALS',
     };
   }
 
   if (profile === null || profile === undefined) {
     ctx.status = 401;
     ctx.body = {
-      name: 'WRONG_CRENDENTIAL',
+      name: 'WRONG_CREDENTIALS',
     };
     return;
   }
 
   const socialId = profile.id.toString();
-
   try {
-    let user = await SocialAccount.findBySocialId(socialId);
+    let user = await SocialAccount.findUserBySocialId(socialId);
     if (!user) {
       // if socialaccount not found, try find by email
       user = await User.findUser('email', profile.email);

@@ -7,7 +7,7 @@ export const primaryUUID = {
   primaryKey: true,
 };
 
-// validates schema, return 400 error if not vaild
+// validates schema, return 400 error if not valid
 export const validateSchema = (ctx, schema) => {
   const result = Joi.validate(ctx.request.body);
   if (result.error) {

@@ -16,7 +16,7 @@ const db:Sequelize = new SequelizeCockroach('jeckson', 'jeckson', pw, {
   host,
   dialect: 'postgres',
   port: 26257,
-  loggin: true,
+  logging: true,
   ssl: true,
   dialectOptions: {
     ssl: true,

@@ -14,7 +14,7 @@ const SocialAccount = db.define('social_profile', {
   provider: Seqeulize.STRING,
 });
 
-SocialAccount.findBySocialId = function findBySocialId(socialId: string) {
+SocialAccount.findUserBySocialId = function findUserBySocialId(socialId: string) {
   return SocialAccount.findOne({
     include: [User],
     where: { social_id: socialId },
