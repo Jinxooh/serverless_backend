@@ -1,9 +1,10 @@
 // @flow
-import { decode } from 'lib/token';
 import type { Context } from 'koa';
+import { decode } from 'lib/token';
 
 export default async (ctx: Context, next: () => Promise<*>) => {
-  const token = ctx.cookies.get('token');
+  const token: string | void = ctx.cookies.get('access_token');
+
   if (!token) {
     ctx.user = null;
     return next();
@@ -11,7 +12,6 @@ export default async (ctx: Context, next: () => Promise<*>) => {
 
   try {
     const decoded: any = await decode(token);
-    // console.log(decoded);
     const { user, exp } = decoded;
 
     ctx.user = user;
