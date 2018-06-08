@@ -1,3 +1,4 @@
+// @flow
 import Sequelize from 'sequelize';
 import Joi from 'joi';
 
@@ -9,7 +10,7 @@ export const primaryUUID = {
 
 // validates schema, return 400 error if not valid
 export const validateSchema = (ctx, schema) => {
-  const result = Joi.validate(ctx.request.body);
+  const result = Joi.validate(ctx.request.body, schema);
   if (result.error) {
     ctx.status = 400;
     ctx.body = {
@@ -19,4 +20,8 @@ export const validateSchema = (ctx, schema) => {
     return false;
   }
   return true;
+};
+
+export const filterUnique = (array: Array<*>): Array<*> => {
+  return [...new Set(array)]; // check Duplication
 };

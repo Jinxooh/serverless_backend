@@ -9,6 +9,7 @@ export type CategoryModel = {
   name: string,
   order: number,
   parent: string,
+  private: boolean,
   fk_user_id: string,
 };
 
@@ -17,6 +18,10 @@ const Category = db.define('category', {
   name: Sequelize.STRING,
   order: Sequelize.INTEGER,
   parent: Sequelize.STRING,
+  private: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+  },
   fk_user_id: Sequelize.UUID,
 });
 
