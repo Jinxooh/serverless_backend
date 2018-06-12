@@ -1,4 +1,5 @@
 // @flow
+import type { Context } from 'koa';
 import Sequelize from 'sequelize';
 import Joi from 'joi';
 
@@ -9,7 +10,7 @@ export const primaryUUID = {
 };
 
 // validates schema, return 400 error if not valid
-export const validateSchema = (ctx, schema) => {
+export const validateSchema = (ctx: Context, schema: any) => {
   const result = Joi.validate(ctx.request.body, schema);
   if (result.error) {
     ctx.status = 400;

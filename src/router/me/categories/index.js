@@ -4,5 +4,6 @@ import * as categoriesCtrl from './categories.ctrl';
 
 const categories: Router = new Router();
 categories.get('/', categoriesCtrl.listCategories);
+categories.post('/', categoriesCtrl.createCategory);
 
 export default categories;
