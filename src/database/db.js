@@ -1,6 +1,9 @@
 // @flow
 import SequelizeCockroach from 'sequelize-cockroachdb';
 import type Sequelize from 'sequelize';
+import pg from 'pg';
+
+pg.defaults.parseInt8 = true; // fixes issue: numbers returning as string.
 
 const {
   COCKROACHDB_HOST,
@@ -20,6 +23,7 @@ const db:Sequelize = new SequelizeCockroach('jeckson', 'jeckson', pw, {
   ssl: true,
   dialectOptions: {
     ssl: true,
+    supportBigNumbers: true,
   },
 });
 

@@ -5,7 +5,14 @@ import { validateSchema } from 'lib/common';
 import { Category } from 'database/models';
 
 export const listCategories = async (ctx: Context): Promise<*> => {
-  ctx.body = [];
+  const { id: userId } = ctx.user;
+
+  try {
+    const categories = await Category.listAllCategories(userId);
+    ctx.body = categories;
+  } catch (e) {
+    ctx.throw(500, e);
+  }
 };
 
 export const createCategory = async (ctx: Context): Promise<*> => {
@@ -22,13 +29,19 @@ export const createCategory = async (ctx: Context): Promise<*> => {
   const { name }: BodySchema = (ctx.request.body: any);
   const { id: userId } = ctx.user;
   try {
+    const count = await Category.countRootCategories(userId);
     const category = await Category.build({
       name,
+      order: count,
       fk_user_id: userId,
     }).save();
-
     ctx.body = category.toJSON();
   } catch (e) {
     ctx.throw(500, e);
   }
+};
+
+export const renameCategory = async (ctx: Context): Promise<*> => {
+  const { id } = ctx.user;
+  console.log('id', id);
 };
