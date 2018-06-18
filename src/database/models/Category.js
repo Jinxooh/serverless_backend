@@ -18,11 +18,18 @@ const Category = db.define('category', {
   name: Sequelize.STRING,
   order: Sequelize.INTEGER,
   parent: Sequelize.STRING,
+  fk_user_id: Sequelize.UUID,
   private: {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
   },
-  fk_user_id: Sequelize.UUID,
+}, {
+  indexes: [
+    {
+      name: 'category_order_of_user',
+      fields: ['fk_user_id', 'parent', 'order'],
+    },
+  ],
 });
 
 Category.associate = function associate() {
@@ -38,13 +45,16 @@ Category.countRootCategories = function countRootCategories(userId: string) {
   }).then(data => data.count);
 };
 
-Category.listAllCategories = function listAllCategories(userId: string) {
+Category.listAllCategories = function listAllCategories(userId: string, raw: boolean = true) {
   return Category.findAll({
     attributes: ['id', 'order', 'parent', 'private', 'name'],
+    order: [
+      ['order', 'ASC'],
+    ],
     where: {
       fk_user_id: userId,
     },
-    raw: true,
+    raw,
   });
 };
 

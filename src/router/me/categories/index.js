@@ -6,6 +6,7 @@ import * as categoriesCtrl from './categories.ctrl';
 const categories: Router = new Router();
 categories.get('/', categoriesCtrl.listCategories);
 categories.post('/', categoriesCtrl.createCategory);
+categories.put('/reorder', categoriesCtrl.reorderCategory);
 categories.patch('/:id', checkUUID, categoriesCtrl.renameCategory);
 categories.delete('/:id', checkUUID, categoriesCtrl.deleteCategory);
 
