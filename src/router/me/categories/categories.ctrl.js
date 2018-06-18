@@ -1,8 +1,11 @@
 // @flow
 import type { Context } from 'koa';
 import Joi from 'joi';
+import Sequelize from 'sequelize';
 import { validateSchema, isUUID } from 'lib/common';
 import { Category } from 'database/models';
+
+const { literal } = Sequelize;
 
 export const listCategories = async (ctx: Context): Promise<*> => {
   const { id: userId } = ctx.user;
@@ -101,10 +104,21 @@ export const deleteCategory = async (ctx: Context): Promise<*> => {
     return;
   }
 
-  // try {
-  //   await category.destory();
-  //   await Category.update({
-  //     order: literal('"order" - 1'),
-  //   })
-  // }
+  try {
+    await category.destory();
+    await Category.update({
+      order: literal('"order" - 1'),
+    }, {
+      where: {
+        fk_user_id: userId,
+        order: {
+          $gt: category.order,
+        },
+        parent: category.parent,
+      },
+    });
+    ctx.status = 204;
+  } catch (e) {
+    ctx.throw(500, e);
+  }
 };
