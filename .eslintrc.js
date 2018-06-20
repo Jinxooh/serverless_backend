@@ -15,5 +15,6 @@ module.exports = {
         "camelcase": 0,
         "arrow-body-style": 0,
         "class-methods-use-this": 0,
+        "no-plusplus": 0,
     }
 };

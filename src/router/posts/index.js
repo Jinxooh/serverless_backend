@@ -7,5 +7,5 @@ import * as postCtrl from './post.ctrl';
 const post: Router = new Router();
 
 post.post('/', needsAuth, postCtrl.writePost);
-
+post.get('/@:username/:urlSlug', postCtrl.readPost);
 export default post;
