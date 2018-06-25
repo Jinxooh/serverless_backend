@@ -1,7 +1,7 @@
 // @flow
 import Sequelize from 'sequelize';
 import db from 'database/db';
-import { User } from 'database/models';
+import { User, Tag } from 'database/models';
 import { primaryUUID } from 'lib/common';
 
 export type PostModel = {

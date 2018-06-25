@@ -25,6 +25,9 @@ const db:Sequelize = new SequelizeCockroach('jeckson', 'jeckson', pw, {
     ssl: true,
     supportBigNumbers: true,
   },
+  define: {
+    underscored: true,
+  },
 });
 
 export default db;
