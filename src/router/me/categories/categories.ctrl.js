@@ -21,21 +21,34 @@ export const listCategories = async (ctx: Context): Promise<*> => {
 
 export const createCategory = async (ctx: Context): Promise<*> => {
   type BodySchema = {
-    name: string
+    name: string,
+    urlSlug: string,
   };
 
   const schema = Joi.object().keys({
     name: Joi.string().required().min(1).max(40),
+    urlSlug: Joi.string().min(1).max(40),
   });
 
   if (!validateSchema(ctx, schema)) return;
 
-  const { name }: BodySchema = (ctx.request.body: any);
+  const { name, urlSlug }: BodySchema = (ctx.request.body: any);
   const { id: userId } = ctx.user;
+
+  const urlSlugWithFallback = (urlSlug || name).replace(/ /g, '-');
   try {
+    const exists = await Category.checkUrlSlugExists(userId, urlSlugWithFallback);
+    if (exists) {
+      ctx.status = 409;
+      ctx.body = {
+        name: 'URL_SLUG_DUPLICATE',
+      };
+      return;
+    }
     const count = await Category.countRootCategories(userId);
     const category = await Category.build({
       name,
+      url_slug: urlSlugWithFallback,
       order: count,
       fk_user_id: userId,
     }).save();

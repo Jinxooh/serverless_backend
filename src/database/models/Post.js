@@ -1,7 +1,7 @@
 // @flow
 import Sequelize from 'sequelize';
 import db from 'database/db';
-import { User, Tag } from 'database/models';
+import { User, Tag, Category } from 'database/models';
 import { primaryUUID } from 'lib/common';
 
 export type PostModel = {
@@ -37,6 +37,49 @@ const Post = db.define('post', {
 
 Post.associate = function associate() {
   Post.belongsTo(User, { foreignKey: 'fk_user_id', onDelete: 'restrict', onUpdate: 'restrict' });
+};
+
+Post.readPost = function (username: string, urlSlug: string) {
+  return Post.findOne({
+    attributesw: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_ad', 'updated_at', 'url_slug'],
+    include: [{
+      model: User,
+      attributes: ['username'],
+      where: {
+        username,
+      },
+    }, Tag, Category],
+    where: {
+      url_slug: urlSlug,
+    },
+  });
+};
+
+Post.listPosts = function ({
+  username,
+  category,
+  page,
+}: {
+  username: string,
+  category: ?string,
+  page: ?number
+}) {
+  const include = [
+    {
+      model: User,
+      attributes: ['username'],
+      where: { username },
+    },
+  ];
+  if (category) {
+
+  }
+  return Post.findAll({
+    attributes: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_at', 'updated_at', 'url_slug'],
+    include: [
+
+    ],
+  });
 };
 
 export default Post;

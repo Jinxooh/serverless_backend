@@ -16,5 +16,6 @@ module.exports = {
         "arrow-body-style": 0,
         "class-methods-use-this": 0,
         "no-plusplus": 0,
+        "func-names": 0,
     }
 };
