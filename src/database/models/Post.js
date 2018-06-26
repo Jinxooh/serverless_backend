@@ -54,31 +54,51 @@ Post.readPost = function (username: string, urlSlug: string) {
     },
   });
 };
+type PostsQueryInfo = {
+  username: string,
+  tag: ?string,
+  categoryUrlSlug: ?string,
+  page: ?number,
+}
+
+Post.countPosts = function ({
+  username,
+  categoryUrlSlug,
+  tag,
+  page,
+}: PostsQueryInfo) {
+
+};
 
 Post.listPosts = function ({
   username,
-  category,
+  categoryUrlSlug,
+  tag,
   page,
-}: {
-  username: string,
-  category: ?string,
-  page: ?number
-}) {
-  const include = [
-    {
-      model: User,
-      attributes: ['username'],
-      where: { username },
-    },
-  ];
-  if (category) {
-
-  }
+}: PostsQueryInfo) {
+  const limit = 10;
   return Post.findAll({
+    order: [['created_at', 'DESC']],
     attributes: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_at', 'updated_at', 'url_slug'],
     include: [
-
+      {
+        model: User,
+        attributes: ['username'],
+        where: { username },
+      },
+      {
+        model: Category,
+        attributes: ['url_slug', 'name'],
+        where: categoryUrlSlug ? { url_slug: categoryUrlSlug } : null,
+      },
+      {
+        model: Tag,
+        attributes: ['name'],
+        where: tag ? { name: tag } : null,
+      },
     ],
+    offset: ((!page ? 1 : page) - 1) * limit,
+    limit,
   });
 };
 
