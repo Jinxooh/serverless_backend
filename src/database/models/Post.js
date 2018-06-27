@@ -41,7 +41,7 @@ Post.associate = function associate() {
 
 Post.readPost = function (username: string, urlSlug: string) {
   return Post.findOne({
-    attributesw: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_ad', 'updated_at', 'url_slug'],
+    attributes: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_at', 'updated_at', 'url_slug'],
     include: [{
       model: User,
       attributes: ['username'],
@@ -54,49 +54,74 @@ Post.readPost = function (username: string, urlSlug: string) {
     },
   });
 };
-type PostsQueryInfo = {
-  username: string,
-  tag: ?string,
-  categoryUrlSlug: ?string,
-  page: ?number,
-}
 
-Post.countPosts = function ({
-  username,
-  categoryUrlSlug,
-  tag,
-  page,
-}: PostsQueryInfo) {
-
+Post.readPostById = function (id) {
+  return Post.findOne({
+    attributes: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_at', 'updated_at', 'url_slug'],
+    include: [{
+      model: User,
+      attributes: ['username'],
+    }, Tag, Category],
+    where: {
+      id,
+    },
+  });
 };
 
-Post.listPosts = function ({
+
+type PostsQueryInfo = {
+  username: ?string,
+  tag: ?string,
+  categoryUrlSlug: ?string,
+  page: ?number
+};
+
+Post.listPosts = async function ({
   username,
   categoryUrlSlug,
   tag,
   page,
 }: PostsQueryInfo) {
-  const limit = 10;
-  return Post.findAll({
+  // get postId list
+  let posts = await Post.findAll({
+    attributes: ['id'],
     order: [['created_at', 'DESC']],
-    attributes: ['id', 'title', 'body', 'thumbnail', 'is_markdown', 'created_at', 'updated_at', 'url_slug'],
-    include: [
-      {
-        model: User,
-        attributes: ['username'],
-        where: { username },
-      },
-      {
-        model: Category,
-        attributes: ['url_slug', 'name'],
-        where: categoryUrlSlug ? { url_slug: categoryUrlSlug } : null,
-      },
-      {
-        model: Tag,
-        attributes: ['name'],
-        where: tag ? { name: tag } : null,
-      },
-    ],
+    include: [{
+      model: User,
+      attributes: ['username'],
+      where: username ? { username } : null,
+    }, {
+      model: Tag,
+      where: tag ? { name: tag } : null,
+    }, {
+      model: Category,
+      where: categoryUrlSlug ? { url_slug: categoryUrlSlug } : null,
+    }],
+    raw: true,
+  });
+
+  posts = await Promise.all(posts.map(({ id }) => id).map(Post.readPostById));
+  return posts;
+};
+
+type PublicPostsQueryInfo = {
+  tag: string,
+  page: number,
+  option: any
+};
+
+Post.listPublicPosts = function ({
+  tag, page, option,
+}: PublicPostsQueryInfo) {
+  const limit = 10;
+  return Post.findAndCountAll({
+    distinct: 'id',
+    order: [['created_at', 'DESC']],
+    include: [{
+      model: Tag,
+      attributes: ['name'],
+      where: tag ? { name: tag } : null,
+    }],
     offset: ((!page ? 1 : page) - 1) * limit,
     limit,
   });

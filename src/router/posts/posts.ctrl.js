@@ -30,8 +30,8 @@ export const writePost = async (ctx: Context): Promise<*> => {
     isMarkdown: Joi.boolean().required(),
     isTemp: Joi.boolean().required(),
     meta: Joi.object(),
-    categories: Joi.array().items(Joi.string()),
-    tags: Joi.array().items(Joi.string()),
+    categories: Joi.array().items(Joi.string()).required(),
+    tags: Joi.array().items(Joi.string()).required(),
     urlSlug: Joi.string().max(130),
   });
 
@@ -53,6 +53,7 @@ export const writePost = async (ctx: Context): Promise<*> => {
   const uniqueCategories: Array<string> = filterUnique(categories);
 
   try {
+    // check: all categories are valid
     const ownCategories = await Category.listAllCategories(ctx.user.id);
 
     for (let i = 0; i < uniqueCategories.length; i++) {
@@ -66,6 +67,7 @@ export const writePost = async (ctx: Context): Promise<*> => {
         return;
       }
     }
+
     const tagIds = await Promise.all(uniqueTags.map(tag => Tag.getId(tag)));
     // create Post data
     const post = await Post.build({
@@ -112,16 +114,8 @@ export const readPost = async (ctx: Context): Promise<*> => {
       const tags = data.tags.map(tag => tag.name);
       const categories = data.categories.map(category => category.name);
       return {
-        id,
-        title,
-        body,
-        thumbnail,
-        is_markdown,
-        created_at,
-        updated_at,
-        tags,
-        categories,
-        url_slug,
+        id, title, body, thumbnail, is_markdown,
+        created_at, updated_at, tags, categories, url_slug,
       };
     };
     ctx.body = serialize(post);
@@ -130,11 +124,37 @@ export const readPost = async (ctx: Context): Promise<*> => {
   }
 };
 
+const serialize = (data) => {
+  const {
+    id, title, body, thumbnail, is_markdown, created_at, updated_at, url_slug,
+  } = data;
+  const tags = data.tags.map(t => t.name);
+  const categories = data.categories.map(c => c.name);
+  return {
+    id, title, body: body.slice(0, 250), thumbnail, is_markdown,
+    created_at, updated_at, tags, categories, url_slug,
+  };
+};
+
 export const listPosts = async (ctx: Context): Promise<*> => {
   const { username } = ctx.params;
   const { category, tag, page } = ctx.query;
 
-  const sequelize = (data) => {
+  const query = { username, categorySlug: category, tag };
+
+  try {
+    const data = await Post.listPosts(query);
+    ctx.body = data.map(serialize);
+  } catch (e) {
+    ctx.throw(500, e);
+  }
+};
+/*
+export const listPosts = async (ctx: Context): Promise<*> => {
+  const { username } = ctx.params;
+  const { category, tag, page } = ctx.query;
+
+  const serialize = (data) => {
     const {
       id, title, body, thumbnail, is_markdown, created_at, updated_at, url_slug,
     } = data;
@@ -146,15 +166,23 @@ export const listPosts = async (ctx: Context): Promise<*> => {
     };
   };
 
+  const query = { username, categorySlug: category, tag };
   try {
     const posts = await Post.listPosts({
-      username,
-      categoryUrlSlug: category,
-      tag,
+      ...query,
       page,
     });
-    ctx.body = posts.map(sequelize);
+    const postCount = posts.count;
+    const pageLimit = Math.ceil(postCount / 10);
+
+
+    console.log(postCount);
+
+    ctx.set('Page-Limit', (pageLimit || 1).toString());
+    ctx.set('Post-Count', (postCount).toString());
+    ctx.body = posts.rows.map(serialize);
   } catch (e) {
     ctx.throw(500, e);
   }
 };
+*/
