@@ -4,6 +4,8 @@ import db from 'database/db';
 import { User, Tag, Category } from 'database/models';
 import { primaryUUID } from 'lib/common';
 
+const { Op } = Sequelize;
+
 export type PostModel = {
   id: string,
   title: string,
@@ -83,7 +85,7 @@ Post.listPosts = async function ({
   page,
 }: PostsQueryInfo) {
   // get postId list
-  let posts = await Post.findAll({
+  const posts = await Post.findAll({
     attributes: ['id'],
     order: [['created_at', 'DESC']],
     include: [{
@@ -100,8 +102,16 @@ Post.listPosts = async function ({
     raw: true,
   });
 
-  posts = await Promise.all(posts.map(({ id }) => id).map(Post.readPostById));
-  return posts;
+  const postIds = posts.map(({ id }) => id);
+  const fullPosts = await Post.findAll({
+    include: [User, Tag, Category],
+    where: {
+      id: {
+        $or: postIds,
+      },
+    },
+  });
+  return fullPosts;
 };
 
 type PublicPostsQueryInfo = {
