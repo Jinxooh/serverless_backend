@@ -92,9 +92,11 @@ export const unlikePost = async (ctx: Context): Promise<*> => {
     }
 
     await exists.destroy();
-    const post.unlike();
+    // TODO: increment like_sum
+    const { post } = ctx;
+    await post.unlike();
     ctx.body = {
-      likes: post.likes;
+      likes: post.likes,
     };
   } catch (e) {
     ctx.throw(500, e);
@@ -106,9 +108,9 @@ export const deletePost = async (ctx: Context): Promise<*> => {
 
   try {
     await Promise.all([
-      db.getQueryInterface().bulkDelete('posts_categories', { fk_post_id: post.id });
-      db.getQueryInterface().bulkDelete('posts_tags', { fk_post_id: post.id });
-      db.getQueryInterface().bulkDelete('post_likes', { fk_post_id: post.id });
+      db.getQueryInterface().bulkDelete('posts_categories', { fk_post_id: post.id }),
+      db.getQueryInterface().bulkDelete('posts_tags', { fk_post_id: post.id }),
+      db.getQueryInterface().bulkDelete('post_likes', { fk_post_id: post.id }),
     ]);
 
     await post.destroy();
@@ -116,4 +118,4 @@ export const deletePost = async (ctx: Context): Promise<*> => {
   } catch (e) {
     ctx.throw(500, e);
   }
-}
+};
