@@ -45,12 +45,12 @@ export const updatePost = async (ctx: Context): Promise<*> => {
   };
 
   const schema = Joi.object().keys({
-    title: Joi.string().required().min(1).max(120),
-    body: Joi.string().required().min(1),
+    title: Joi.string().min(1).max(120),
+    body: Joi.string().min(1),
     thumbnail: Joi.string(),
-    isTemp: Joi.boolean().required(),
-    categories: Joi.array().items(Joi.string()).required(),
-    tags: Joi.array().items(Joi.string()).required(),
+    isTemp: Joi.boolean(),
+    categories: Joi.array().items(Joi.string()),
+    tags: Joi.array().items(Joi.string()),
     urlSlug: Joi.string().max(130),
   });
 
@@ -59,7 +59,9 @@ export const updatePost = async (ctx: Context): Promise<*> => {
     categories, urlSlug, thumbnail, isTemp,
   }: BodySchema = (ctx.request.body: any);
 
-  const generatedUrlSlug = `title-${generatedUrlSlug()}`;
+  const generatedUrlSlug = `title-${generateSlugId()}`;
+  const escapedUrlSlug = escapeForUrl(urlSlug || generatedUrlSlug);
+
   // const escapedUrlSlug = escapeForUrl(urlSlug || generatedUrlSlug);
 
   // ctx.post.update({
@@ -67,6 +69,34 @@ export const updatePost = async (ctx: Context): Promise<*> => {
   //   body,
   //   url_slug; escapeForUrl,
   // })
+  const { id } = ctx.params;
+
+  const urlSlugShouldChange = title && (ctx.post.title !== title);
+  console.log(ctx.post.title, title);
+  const updateQuery = {
+    title,
+    body,
+    url_slug: urlSlugShouldChange && escapedUrlSlug,
+    thumbnail,
+    is_temp: isTemp,
+  };
+
+  Object.keys(updateQuery).forEach((key) => {
+    if (!updateQuery[key]) {
+      delete updateQuery[key];
+    }
+  });
+
+  console.log(updateQuery);
+
+  try {
+    await  ctx.post.update(updateQuery);
+    const post = await Post.readPostById(id);
+    const serialized = serializePost(post);
+    ctx.body = serialized;
+  } catch (e) {
+    ctx.throw(500, e);
+  }
 };
 
 export const readPost = async (ctx: Context): Promise<*> => {

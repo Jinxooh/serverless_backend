@@ -46,7 +46,7 @@ export const writePost = async (ctx: Context): Promise<*> => {
 
   // const generatedUrlSlug = `${title}-${shortid.generate()}`;
   // const escapedUrlSlug = (urlSlug || generatedUrlSlug).replace(/ /g, '-');
-  const generatedUrlSlug = `${title}-${generateSlugId()}`;
+  const generatedUrlSlug = `${title} ${generateSlugId()}`;
   const escapedUrlSlug = escapeForUrl(urlSlug || generatedUrlSlug);
   const replaceDashToSpace = text => text.replace(/-/g, ' ');
   // TODO: validate url slug
