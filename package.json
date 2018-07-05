@@ -46,6 +46,7 @@
     "github": "^14.0.0",
     "googleapis": "^30.0.0",
     "joi": "^13.0.2",
+    "json-diff": "^0.5.2",
     "jsonwebtoken": "^8.1.0",
     "koa": "^2.4.1",
     "koa-bodyparser": "^4.2.0",

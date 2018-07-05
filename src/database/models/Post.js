@@ -147,6 +147,18 @@ type PublicPostsQueryInfo = {
   option: any
 };
 
+Post.checkUrlSlugExistancy = function ({
+  userId,
+  urlSlug,
+}) {
+  return Post.count({
+    where: {
+      fk_user_id: userId,
+      url_slug: urlSlug,
+    },
+  });
+};
+
 Post.listPublicPosts = function ({
   tag, page, option,
 }: PublicPostsQueryInfo) {
@@ -161,6 +173,19 @@ Post.listPublicPosts = function ({
     }],
     offset: ((!page ? 1 : page) - 1) * limit,
     limit,
+  });
+};
+
+Post.prototype.getTagNames = async function (): Promise<*> {
+  const { id } = this;
+  return Post.find({
+    include: [{
+      model: Tag,
+      attributes: ['name'],
+    }],
+    where: {
+      id,
+    },
   });
 };
 
