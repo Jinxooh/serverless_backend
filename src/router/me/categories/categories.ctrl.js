@@ -119,7 +119,7 @@ export const deleteCategory = async (ctx: Context): Promise<*> => {
   }
 
   try {
-    await category.destory();
+    await category.destroy();
     await Category.update({
       order: literal('"order" - 1'),
     }, {
