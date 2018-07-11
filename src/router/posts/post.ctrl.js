@@ -5,7 +5,7 @@ import db from 'database/db';
 import Joi from 'joi';
 import { validateSchema, generateSlugId, escapeForUrl } from 'lib/common';
 import { diff } from 'json-diff';
-import { Post, PostLike, PostsTags, PostsCategories } from 'database/models';
+import { Post, PostLike, PostsTags, PostsCategories, Category } from 'database/models';
 
 export const checkPostExistancy = async (ctx: Context, next: () => Promise<*>): Promise<*> => {
   const { id } = ctx.params;
@@ -112,24 +112,53 @@ export const updatePost = async (ctx: Context): Promise<*> => {
     }
   });
 
-  const currentTags = await ctx.post.getTagNames();
-  const tagNames = currentTags.tags.map(tag => tag.name);
-  const tagDiff = diff(tagNames.sort(), tags.sort()) || [];
-
-  const tagsToRemove = tagDiff.filter(info => info[0] === '-').map(info => info[1]);
-  const tagsToAdd = tagDiff.filter(info => info[0] === '+').map(info => info[1]);
-
   // TODO: Verify Categories
-  const currentCategories = await ctx.post.getCategoryIds();
-  const categoryDiff = diff(currentCategories.sort(), categories.sort());
-  const categoriesToRemove = categoryDiff.filter(info => info[0] === '-').map(info => info[1]);
-  const categoriesToAdd = categoryDiff.filter(info => info[0] === '+').map(info => info[1]);
+  if (tags) {
+    const currentTags = await ctx.post.getTagNames();
+    const tagNames = currentTags.tags.map(tag => tag.name);
+    const tagDiff = diff(tagNames.sort(), tags.sort()) || [];
+
+    const tagsToRemove = tagDiff.filter(info => info[0] === '-').map(info => info[1]);
+    const tagsToAdd = tagDiff.filter(info => info[0] === '+').map(info => info[1]);
+
+    try {
+      await PostsTags.removeTagsFromPost(id, tagsToRemove);
+      await PostsTags.addTagsToPost(id, tagsToAdd);
+    } catch (e) {
+      ctx.throw(e);
+    }
+  }
+
+  if (categories) {
+    try {
+      const count = await Category.count({
+        where: {
+          id: {
+            $or: categories,
+          },
+          fk_user_id: ctx.user.id,
+        },
+      });
+      if (count !== categories.length) {
+        ctx.status = 409;
+        ctx.body = {
+          name: 'NOT_OWN_CATEGORY',
+        };
+        return;
+      }
+      const currentCategories = await ctx.post.getCategoryIds();
+      const categoryDiff = diff(currentCategories.sort(), categories.sort());
+      const categoriesToRemove = categoryDiff.filter(info => info[0] === '-').map(info => info[1]);
+      const categoriesToAdd = categoryDiff.filter(info => info[0] === '+').map(info => info[1]);
+
+      await PostsCategories.removeCategoriesFromPost(id, categoriesToRemove);
+      await PostsCategories.addCategoriesToPost(id, categoriesToAdd);
+    } catch (e) {
+      ctx.throw(e);
+    }
+  }
 
   try {
-    await PostsTags.removeTagsFromPost(id, tagsToRemove);
-    await PostsTags.addTagsToPost(id, tagsToAdd);
-    await PostsCategories.removeCategoriesFromPost(id, categoriesToRemove);
-    await PostsCategories.addCategoriesToPost(id, categoriesToAdd);
     await ctx.post.update(updateQuery);
     const post = await Post.readPostById(id);
     const serialized = serializePost(post);
@@ -148,6 +177,12 @@ export const readPost = async (ctx: Context): Promise<*> => {
   } catch (e) {
     ctx.throw(500, e);
   }
+};
+
+export const getLike = async (ctx: Context): Promise<*> => {
+  ctx.body = {
+    likes: ctx.post.likes,
+  };
 };
 
 export const likePost = async (ctx: Context): Promise<*> => {
@@ -170,7 +205,6 @@ export const likePost = async (ctx: Context): Promise<*> => {
       fk_user_id: userId,
       fk_post_id: id,
     }).save();
-    // TODO: increment like_sum
     const { post } = ctx;
     await post.like();
     ctx.body = {
@@ -198,7 +232,6 @@ export const unlikePost = async (ctx: Context): Promise<*> => {
     }
 
     await exists.destroy();
-    // TODO: increment like_sum
     const { post } = ctx;
     await post.unlike();
     ctx.body = {
