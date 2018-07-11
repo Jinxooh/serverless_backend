@@ -2,11 +2,10 @@
 import Sequelize from 'sequelize';
 import db from 'database/db';
 import { User, Tag, Category } from 'database/models';
-import { primaryUUID } from 'lib/common';
 
 const { Op } = Sequelize;
 
-export type PostModel = {
+export type PostModel= {
   id: string,
   title: string,
   body: string,
@@ -15,10 +14,14 @@ export type PostModel = {
   is_markdown: boolean,
   is_temp: boolean,
   meta_json: string,
-}
+};
 
 const Post = db.define('post', {
-  id: primaryUUID,
+  id: {
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV1,
+    primaryKey: true,
+  },
   title: Sequelize.STRING,
   body: Sequelize.TEXT,
   short_description: Sequelize.STRING,
@@ -32,7 +35,7 @@ const Post = db.define('post', {
   likes: {
     defaultValue: 0,
     type: Sequelize.INTEGER,
-  }
+  },
 }, {
   indexes: [
     {
@@ -74,13 +77,6 @@ Post.readPostById = function (id) {
   });
 };
 
-Post.prototype.like = async function like(): Promise<*> {
-  return this.increment('likes', { by: 1 });
-};
-
-Post.prototype.unlike = async function unlike(): Promise<*> {
-  return this.decrement('likes', { by: 1 });
-};
 
 type PostsQueryInfo = {
   username: ?string,
@@ -110,7 +106,7 @@ Post.listPosts = async function ({
 
   try {
     const countResult = await db.query(`SELECT COUNT(DISTINCT p.id) as count FROM posts p ${query}`, { bind: { tag, username, category: categoryUrlSlug }, type: Sequelize.QueryTypes.SELECT });
-    const { count } = countResult;
+    const { count } = countResult[0];
 
     if (!count) return { count: 0, data: null };
 
@@ -122,6 +118,7 @@ Post.listPosts = async function ({
     `, { bind: { tag, username, category: categoryUrlSlug }, type: Sequelize.QueryTypes.SELECT });
 
     if (rows.length === 0) return { count: 0, data: null };
+    const postIds = rows.map(({ id }) => id);
 
     const fullPosts = await Post.findAll({
       include: [User, Tag, Category],
@@ -131,7 +128,7 @@ Post.listPosts = async function ({
         },
       },
     });
-
+    // posts = await Promise.all();
     return {
       count,
       data: fullPosts,
@@ -176,6 +173,14 @@ Post.listPublicPosts = function ({
   });
 };
 
+Post.prototype.like = async function like(): Promise<*> {
+  return this.increment('likes', { by: 1 });
+};
+
+Post.prototype.unlike = async function like(): Promise<*> {
+  return this.decrement('likes', { by: 1 });
+};
+
 Post.prototype.getTagNames = async function (): Promise<*> {
   const { id } = this;
   return Post.find({
@@ -189,12 +194,33 @@ Post.prototype.getTagNames = async function (): Promise<*> {
   });
 };
 
+Post.prototype.getCategoryIds = async function (): Promise<*> {
+  const { id } = this;
+  try {
+    const post = await Post.findOne({
+      include: [{
+        model: Category,
+        attributes: ['id'],
+      }],
+      where: {
+        id,
+      },
+    });
+    if (!post) {
+      return null;
+    }
+    return post.categories.map(c => c.id);
+  } catch (e) {
+    throw e;
+  }
+};
+
 export const serializePost = (data: any) => {
   const {
     id, title, body, thumbnail, is_markdown, created_at, updated_at, url_slug, likes,
   } = data;
   const tags = data.tags.map(tag => tag.name);
-  const categories = data.categories.map(category => ({ id: category.id, name:  category.name }));
+  const categories = data.categories.map(category => ({ id: category.id, name: category.name }));
   return {
     id, title, body, thumbnail, is_markdown,
     created_at, updated_at, tags, categories, url_slug, likes,
